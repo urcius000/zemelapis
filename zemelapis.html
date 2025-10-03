@@ -3,20 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lietuvos žemėlapis – Panevėžys žalias</title>
+  <title>Lietuvos žemėlapis – Panevėžys</title>
   <style>
     :root{ --grey:#bdbdbd; --stroke:#424242; --green:#1e8e3e; }
-    html,body{margin:0;background:#fff;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#000}
-    .map{position:relative}
-    .map svg{display:block;width:100%;height:auto;background:#fff}
-    /* visi regionai pilki */
-    .region{fill:var(--grey) !important; stroke:var(--stroke) !important; stroke-width:1 !important;}
-    /* Panevėžys žalias */
-    .region-panevezys{fill:var(--green) !important;}
-    /* tooltip */
-    .tooltip{position:absolute;transform:translate(-9999px,-9999px);
-      background:#000;color:#fff;padding:6px 10px;border-radius:6px;
-      font-size:13px;white-space:nowrap;pointer-events:none}
+    html,body{ margin:0; background:#fff; font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:#000; }
+    .map{ position:relative }
+    .map svg{ display:block; width:100%; height:auto; background:#fff }
+    .region{ fill:var(--grey) !important; stroke:var(--stroke) !important; stroke-width:1 !important; }
+    .region-panevezys{ fill:var(--green) !important; }
+    .tooltip{
+      position:absolute; transform:translate(-9999px,-9999px);
+      background:#000; color:#fff; padding:6px 10px; border-radius:6px;
+      font-size:13px; white-space:nowrap; pointer-events:none
+    }
   </style>
 </head>
 <body>
@@ -26,9 +25,10 @@
   </div>
 
   <script>
-    // Švarus administracinis Lietuvos žemėlapis
-    const SVG_URL = 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Lithuania_adm_location_map.svg';
+    // Stabilus failo kelias per Special:FilePath
+    const SVG_URL = 'https://commons.wikimedia.org/wiki/Special:FilePath/Lithuania_adm_location_map.svg?original=1';
 
+    // Galimi <title> pavadinimai Panevėžiui (kaip būna SVG viduje)
     const PANEVEZYS_TITLES = [
       'Panevėžio m. sav.',
       'Panevėžys city municipality',
@@ -42,40 +42,40 @@
 
       let svgText;
       try{
-        const res = await fetch(SVG_URL, {mode:'cors'});
-        if(!res.ok) throw new Error(res.status);
+        const res = await fetch(SVG_URL, {mode:'cors', cache:'no-store'});
+        if(!res.ok) throw new Error('HTTP '+res.status);
         svgText = await res.text();
       }catch(e){
-        host.textContent = "Nepavyko užkrauti SVG: "+e.message;
+        host.textContent = 'Nepavyko užkrauti SVG: '+e.message;
         return;
       }
 
       host.innerHTML = svgText;
       const svg = host.querySelector('svg');
-      if(!svg){ host.textContent = "SVG nerastas"; return; }
+      if(!svg){ host.textContent = 'SVG nerastas'; return; }
 
-      svg.querySelectorAll('rect, text').forEach(el=>el.remove());
+      // (Jei yra legendų ar tekstų – pašalinam. Šitam faile paprastai jų nėra.)
+      svg.querySelectorAll('rect[data-legend], text[data-legend]').forEach(el=>el.remove());
 
+      // Perdažom VISUS geometrijos elementus pilkai, Panevėžį – žaliai
+      let panevezysEl = null;
       const shapes = Array.from(svg.querySelectorAll('path, polygon, polyline'));
       shapes.forEach(el=>{
-        el.removeAttribute('fill');
+        el.removeAttribute('fill'); // nuimam galimas inline spalvas
         el.classList.add('region');
-      });
-
-      let panevezysEl = null;
-      shapes.forEach(el=>{
-        const titleText = (el.querySelector('title')?.textContent || '').trim();
-        if(PANEVEZYS_TITLES.includes(titleText)){
+        const t = (el.querySelector('title')?.textContent || el.getAttribute('title') || '').trim();
+        if (PANEVEZYS_TITLES.includes(t)) {
           el.classList.add('region-panevezys');
           panevezysEl = el;
         }
       });
 
-      if(panevezysEl){
+      // Tooltip „Mediena“ – tik Panevėžiui
+      if (panevezysEl) {
         panevezysEl.addEventListener('mousemove', e=>{
-          const bounds = host.getBoundingClientRect();
-          tip.textContent = "Mediena";
-          tip.style.transform = `translate(${e.clientX - bounds.left + 12}px, ${e.clientY - bounds.top - 10}px)`;
+          const b = host.getBoundingClientRect();
+          tip.textContent = 'Mediena';
+          tip.style.transform = `translate(${e.clientX - b.left + 12}px, ${e.clientY - b.top - 10}px)`;
         });
         panevezysEl.addEventListener('mouseleave', ()=> tip.style.transform = 'translate(-9999px,-9999px)');
       }
@@ -83,6 +83,7 @@
   </script>
 </body>
 </html>
+
 
 
 
