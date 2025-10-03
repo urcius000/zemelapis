@@ -3,85 +3,125 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Lietuvos žemėlapis – Simplemaps</title>
+  <title>Lietuvos žemėlapis – Panevėžys</title>
   <style>
-    html,body{margin:0;background:#fff;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#000}
-    #map{max-width:1000px;margin:24px auto}
+    html,body{
+      margin:0;
+      background:#fff;
+      font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    }
+    #map{
+      max-width:1000px;
+      margin:24px auto;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- 1) Simplemaps biblioteka (iš tavo ZIP) -->
+  <!-- 1) Simplemaps biblioteka (būtinai įkelk simplemaps_countrymap.js į repo) -->
   <script src="./simplemaps_countrymap.js"></script>
 
-  <!-- 2) Tavo Lietuvos duomenys (iš ZIP) -->
-  <script src="./mapdata.js"></script>
-
-  <!-- 3) Perrašom spalvas ir Panevėžio tooltip -->
+  <!-- 2) Čia tavo mapdata (vietoje atskiro mapdata.js) -->
   <script>
-    // Paleidžiam, kai Simplemaps užkrauna žemėlapį
-    window.addEventListener('DOMContentLoaded', function() {
-      // 1) Visi regionai – pilki (default)
-      if (window.simplemaps_countrymap_mapdata && simplemaps_countrymap_mapdata.main_settings) {
-        simplemaps_countrymap_mapdata.main_settings.background_color = "#FFFFFF";
-        simplemaps_countrymap_mapdata.main_settings.state_color = "#BDBDBD";       // pilka
-        simplemaps_countrymap_mapdata.main_settings.state_hover_color = "#BDBDBD"; // jokio hover tono keitimo
-        simplemaps_countrymap_mapdata.main_settings.border_color = "#424242";
-        simplemaps_countrymap_mapdata.main_settings.popups = "on_hover";
-        simplemaps_countrymap_mapdata.main_settings.div = "map";
-        simplemaps_countrymap_mapdata.main_settings.width = "responsive";
-      }
+  var simplemaps_countrymap_mapdata = {
+    main_settings: {
+      width: "responsive",
+      background_color: "#FFFFFF",
+      background_transparent: "no",
+      border_color: "#424242",
 
-      // 2) Surandam Panevėžį pagal pavadinimą ir nudažom žaliai + tooltip "Mediena"
-      (function markPanevezys(){
-        const data = window.simplemaps_countrymap_mapdata || {};
-        const states = data.state_specific || {};
-        const want = ["panevėž", "panevez"]; // ieškom pavadinime (LT/EN be diakritikų)
+      state_color: "#BDBDBD",          // visi pilki
+      state_hover_color: "#BDBDBD",    // hover nepasikeičia
+      border_size: 1,
+      all_states_inactive: "yes",      // visi neaktyvūs
+      all_states_zoomable: "no",
 
-        const norm = s => (s||"")
-          .toLowerCase()
-          .replaceAll("ė","e").replaceAll("ž","z").replaceAll("š","s").replaceAll("ą","a")
-          .replaceAll("ę","e").replaceAll("į","i").replaceAll("ų","u").replaceAll("ū","u")
-          .replaceAll("č","c");
+      div: "map",
+      auto_load: "yes",
+      popups: "on_hover",
+    },
 
-        // bandome rasti atitinkančią „state_specific“ reikšmę
-        let foundKey = null;
-        for (const key in states) {
-          const name = states[key]?.name || "";
-          const n = norm(name);
-          if (want.some(w => n.includes(w))) {
-            foundKey = key;
-            break;
-          }
-        }
+    state_specific: {
+      LT32:{name:"Panevezio Miestas"},
+      LT33:{name:"Panevezys"},
+      LT01:{name:"Akmene"},
+      LT02:{name:"Alytaus Miestas"},
+      LT03:{name:"Alytus"},
+      LT04:{name:"Anyksciai"},
+      LT05:{name:"Birstonas"},
+      LT06:{name:"Birzai"},
+      LT07:{name:"Druskininkai"},
+      LT08:{name:"Elektrenai"},
+      LT09:{name:"Ignalina"},
+      LT10:{name:"Jonava"},
+      LT11:{name:"Joniskis"},
+      LT12:{name:"Jurbarkas"},
+      LT13:{name:"Kaisiadorys"},
+      LT14:{name:"Kalvarija"},
+      LT15:{name:"Kauno Miestas"},
+      LT16:{name:"Kaunas"},
+      LT17:{name:"Kazlu Rudos"},
+      LT18:{name:"Kedainiai"},
+      LT19:{name:"Kelme"},
+      LT20:{name:"Klaipedos Miestas"},
+      LT21:{name:"Klaipeda"},
+      LT22:{name:"Kretinga"},
+      LT23:{name:"Kupiskis"},
+      LT24:{name:"Lazdijai"},
+      LT25:{name:"Marijampole"},
+      LT26:{name:"Mazeikiai"},
+      LT27:{name:"Moletai"},
+      LT28:{name:"Neringa"},
+      LT29:{name:"Pagegiai"},
+      LT30:{name:"Pakruojis"},
+      LT31:{name:"Palangos Miestas"},
+      LT34:{name:"Pasvalys"},
+      LT35:{name:"Plunge"},
+      LT36:{name:"Prienai"},
+      LT37:{name:"Radviliskis"},
+      LT38:{name:"Raseiniai"},
+      LT39:{name:"Rietavas"},
+      LT40:{name:"Rokiskis"},
+      LT41:{name:"Sakiai"},
+      LT42:{name:"Salcininkai"},
+      LT43:{name:"Siauliu Miestas"},
+      LT44:{name:"Šiauliai"},
+      LT45:{name:"Silale"},
+      LT46:{name:"Silute"},
+      LT47:{name:"Sirvintos"},
+      LT48:{name:"Skuodas"},
+      LT49:{name:"Svencionys"},
+      LT50:{name:"Taurage"},
+      LT51:{name:"Telsiai"},
+      LT52:{name:"Trakai"},
+      LT53:{name:"Ukmerge"},
+      LT54:{name:"Utena"},
+      LT55:{name:"Varena"},
+      LT56:{name:"Vilkaviskis"},
+      LT57:{name:"Vilniaus Miestas"},
+      LT58:{name:"Vilnius"},
+      LT59:{name:"Visaginas"},
+      LT60:{name:"Zarasai"}
+    }
+  };
 
-        if (!foundKey) {
-          console.warn("Panevėžys nerastas state_specific – patikrink mapdata.js pavadinimus/ID.");
-          return;
-        }
-
-        // Nustatom žalią spalvą ir hover tekstą "Mediena"
-        states[foundKey] = {
-          ...(states[foundKey] || {}),
-          color: "#1e8e3e",
-          hover: "Mediena"
-        };
-      })();
-
-      // 3) Inicijuojam žemėlapį
-      if (window.simplemaps_countrymap && simplemaps_countrymap.load) {
-        simplemaps_countrymap.load();
-      } else {
-        console.error("Simplemaps biblioteka neįsikrovė.");
+  // Panevėžio miestas + rajonas perrašomi į žalią su hover
+  (function highlightPanevezys(){
+    const green = "#1e8e3e";
+    ["LT32","LT33"].forEach(id=>{
+      if(simplemaps_countrymap_mapdata.state_specific[id]){
+        Object.assign(simplemaps_countrymap_mapdata.state_specific[id],{
+          color:green,
+          hover:"Mediena",
+          inactive:"no"
+        });
       }
     });
+  })();
   </script>
 </body>
 </html>
-
-
-
 
 
 
