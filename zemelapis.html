@@ -7,14 +7,10 @@
   <style>
     :root{ --grey:#bdbdbd; --stroke:#424242; --green:#1e8e3e; }
     body{margin:0;background:#111;font-family:sans-serif;color:#fff}
-    .map{position:relative}
-    .map svg{display:block;width:100%;height:auto;background:#222}
-    .region{fill:var(--grey);stroke:var(--stroke);stroke-width:1;cursor:pointer;transition:fill .2s}
-    .region.is-active{fill:var(--green)}
-    .region:hover{filter:brightness(1.2)}
-    .tooltip{position:absolute;transform:translate(-9999px,-9999px);
-      background:#000;padding:6px 10px;border-radius:6px;font-size:13px;
-      pointer-events:none;white-space:nowrap}
+    .map svg{display:block;width:100%;height:auto;background:#111}
+    .region{fill:var(--grey) !important; stroke:var(--stroke) !important; stroke-width:1 !important;}
+    .region-panevezys{fill:var(--green) !important;}
+    .tooltip{position:absolute;transform:translate(-9999px,-9999px);background:#000;padding:6px 10px;border-radius:6px;font-size:13px;pointer-events:none;white-space:nowrap}
   </style>
 </head>
 <body>
@@ -26,11 +22,14 @@
   <script>
     const SVG_URL = 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Population_density_in_municipalities_of_Lithuania_%28blank%29.svg';
 
-    // Pažymėtas Panevėžys
-    const HIGHLIGHT_BY_NAME = ['Panevėžio m. sav.'];
-
-    const OVERRIDES_BY_NAME = {
-      'Panevėžio m. sav.': 'Panevėžys – pažymėta vietovė'
+    // Tik Panevėžys
+    const TARGETS = [
+      'Panevėžio m. sav.',
+      'Panevėžys city municipality'
+    ];
+    const LABELS = {
+      'Panevėžio m. sav.': 'Panevėžys – pažymėta vietovė',
+      'Panevėžys city municipality': 'Panevėžys – pažymėta vietovė'
     };
 
     (async function(){
@@ -50,27 +49,28 @@
       const svg = host.querySelector('svg');
       if(!svg){ host.textContent = 'SVG nerastas'; return; }
 
-      const regions = Array.from(svg.querySelectorAll('path, polygon, polyline'));
-      regions.forEach((el, idx)=>{
-        const t = el.querySelector('title')?.textContent?.trim() || ('region-'+idx);
+      // Visus regionus paverčiam pilkais
+      const all = Array.from(svg.querySelectorAll('path, polygon, polyline'));
+      all.forEach((el, idx)=>{
+        const t = (el.querySelector('title')?.textContent || '').trim();
         el.classList.add('region');
-        el.setAttribute('data-name', t);
-        if(HIGHLIGHT_BY_NAME.includes(t)) el.classList.add('is-active');
-      });
+        el.removeAttribute('fill');
+        el.style.fill = null;
 
-      function showTip(el, x, y){
-        const name = el.getAttribute('data-name');
-        tip.textContent = OVERRIDES_BY_NAME[name] || name;
-        const bounds = host.getBoundingClientRect();
-        tip.style.transform = `translate(${x-bounds.left+12}px,${y-bounds.top-10}px)`;
-      }
-      function hideTip(){ tip.style.transform = 'translate(-9999px,-9999px)'; }
-
-      regions.forEach(el=>{
-        el.addEventListener('mousemove', e=>showTip(el,e.clientX,e.clientY));
-        el.addEventListener('mouseleave', hideTip);
+        // Jei tai Panevėžys – padarom žalią
+        if(TARGETS.includes(t)){
+          el.classList.add('region-panevezys');
+          el.addEventListener('mousemove', e=>{
+            tip.textContent = LABELS[t] || t;
+            const bounds = host.getBoundingClientRect();
+            tip.style.transform = `translate(${e.clientX - bounds.left + 12}px, ${e.clientY - bounds.top - 10}px)`;
+          });
+          el.addEventListener('mouseleave', ()=> tip.style.transform = 'translate(-9999px,-9999px)');
+        }
       });
     })();
   </script>
 </body>
 </html>
+
+
