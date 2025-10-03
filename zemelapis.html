@@ -3,96 +3,91 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lietuvos žemėlapis – tik Panevėžys žalias</title>
+  <title>Lietuvos žemėlapis – Panevėžys žalias</title>
   <style>
     :root{ --grey:#bdbdbd; --stroke:#424242; --green:#1e8e3e; }
     html,body{margin:0;background:#111;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#fff}
     .map{position:relative}
     .map svg{display:block;width:100%;height:auto;background:#111}
-    /* Visi savivaldybių poligonai – priverstinai pilki */
+    /* visi regionai pilki */
     .region{fill:var(--grey) !important; stroke:var(--stroke) !important; stroke-width:1 !important;}
-    /* Tik Panevėžys – žalias */
+    /* Panevėžys žalias */
     .region-panevezys{fill:var(--green) !important;}
-    /* Tooltip (tik Panevėžiui, jei reikia) */
-    .tooltip{position:absolute;transform:translate(-9999px,-9999px);background:#000;border:1px solid #2a2a2a;color:#fff;padding:6px 10px;border-radius:8px;font-size:13px;pointer-events:none;white-space:nowrap}
+    /* tooltip */
+    .tooltip{position:absolute;transform:translate(-9999px,-9999px);
+      background:#000;color:#fff;padding:6px 10px;border-radius:6px;
+      font-size:13px;white-space:nowrap;pointer-events:none}
   </style>
 </head>
 <body>
   <div class="map" id="lt-map">
-    <div id="svg-host" style="min-height:420px;display:flex;align-items:center;justify-content:center">Kraunamas žemėlapis…</div>
+    <div id="svg-host" style="min-height:480px;display:flex;align-items:center;justify-content:center">Kraunamas žemėlapis…</div>
     <div class="tooltip" id="tooltip"></div>
   </div>
 
   <script>
-    const SVG_URL = 'https://upload.wikimedia.org/wikipedia/commons/f/f1/Population_density_in_municipalities_of_Lithuania_%28blank%29.svg';
+    // Švarus administracinis Lietuvos žemėlapis
+    const SVG_URL = 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Lithuania_adm_location_map.svg';
 
-    // Priimami <title> pavadinimų raštai savivaldybėms
-    const IS_MUNI = /sav\.|municipality/i;
-
-    // Panevėžys – keli galimi <title> variantai
-    const PANEVEZYS = [
+    // Panevėžio pavadinimų variantai SVG faile
+    const PANEVEZYS_TITLES = [
       'Panevėžio m. sav.',
       'Panevėžys city municipality',
       'Panevezio m. sav.',
       'Panevezys city municipality'
     ];
-    const PANEVEZYS_LABEL = 'Panevėžys – pažymėta vietovė';
 
     (async function(){
       const host = document.getElementById('svg-host');
       const tip  = document.getElementById('tooltip');
 
-      // 1) Užkraunam SVG
       let svgText;
       try{
-        const res = await fetch(SVG_URL, {mode:'cors', cache:'no-store'});
-        if(!res.ok) throw new Error('HTTP '+res.status);
+        const res = await fetch(SVG_URL, {mode:'cors'});
+        if(!res.ok) throw new Error(res.status);
         svgText = await res.text();
-      }catch(err){
-        host.textContent = 'Nepavyko užkrauti SVG: ' + err.message;
+      }catch(e){
+        host.textContent = "Nepavyko užkrauti SVG: "+e.message;
         return;
       }
+
       host.innerHTML = svgText;
-
       const svg = host.querySelector('svg');
-      if(!svg){ host.textContent = 'SVG nerastas.'; return; }
+      if(!svg){ host.textContent = "SVG nerastas"; return; }
 
-      // 2) IŠVALYMAS: pašaliname VISUS path/polygon/polyline, kurie nėra savivaldybės
-      // (t. y. neturi <title> su "sav." arba "municipality")
-      Array.from(svg.querySelectorAll('path, polygon, polyline')).forEach(el=>{
-        const titleText = (el.querySelector('title')?.textContent || el.getAttribute('title') || '').trim();
-        if (!IS_MUNI.test(titleText)) el.remove(); // legendos kvadratai, dekorai, šiukšlės – lauk
+      // Nuvalom legendas, jei tokių būtų
+      svg.querySelectorAll('rect, text').forEach(el=>el.remove());
+
+      // Perdažom visus pilkai
+      const shapes = Array.from(svg.querySelectorAll('path, polygon, polyline'));
+      shapes.forEach(el=>{
+        el.removeAttribute('fill');
+        el.classList.add('region');
       });
 
-      // 3) Likusius (tik savivaldybes) nudažom pilkai; Panevėžį – žaliai
+      // Surandam Panevėžį
       let panevezysEl = null;
-      const regions = Array.from(svg.querySelectorAll('path, polygon, polyline'));
-      regions.forEach((el, idx)=>{
-        const titleText = (el.querySelector('title')?.textContent || el.getAttribute('title') || '').trim();
-
-        // nuvalom įkeltus inline fill'us
-        el.removeAttribute('fill'); el.style.fill = null;
-
-        el.classList.add('region');
-        if (PANEVEZYS.includes(titleText)) {
+      shapes.forEach(el=>{
+        const titleText = (el.querySelector('title')?.textContent || '').trim();
+        if(PANEVEZYS_TITLES.includes(titleText)){
           el.classList.add('region-panevezys');
           panevezysEl = el;
         }
       });
 
-      // 4) Tooltip – tik Panevėžiui (jei nenori, šitą bloką gali pašalinti)
-      function showTip(x, y){
-        const b = host.getBoundingClientRect();
-        tip.textContent = PANEVEZYS_LABEL;
-        tip.style.transform = `translate(${x - b.left + 12}px, ${y - b.top - 10}px)`;
-      }
-      function hideTip(){ tip.style.transform = 'translate(-9999px,-9999px)'; }
-      if (panevezysEl) {
-        panevezysEl.addEventListener('mousemove', e => showTip(e.clientX, e.clientY));
-        panevezysEl.addEventListener('mouseleave', hideTip);
+      // Tooltip – tik Panevėžiui
+      if(panevezysEl){
+        panevezysEl.addEventListener('mousemove', e=>{
+          const bounds = host.getBoundingClientRect();
+          tip.textContent = "Mediena";
+          tip.style.transform = `translate(${e.clientX - bounds.left + 12}px, ${e.clientY - bounds.top - 10}px)`;
+        });
+        panevezysEl.addEventListener('mouseleave', ()=> tip.style.transform = 'translate(-9999px,-9999px)');
       }
     })();
   </script>
 </body>
 </html>
+
+
 
