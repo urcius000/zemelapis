@@ -6,9 +6,9 @@
   <title>Lietuvos žemėlapis – Panevėžys žalias</title>
   <style>
     :root{ --grey:#bdbdbd; --stroke:#424242; --green:#1e8e3e; }
-    html,body{margin:0;background:#111;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#fff}
+    html,body{margin:0;background:#fff;font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#000}
     .map{position:relative}
-    .map svg{display:block;width:100%;height:auto;background:#111}
+    .map svg{display:block;width:100%;height:auto;background:#fff}
     /* visi regionai pilki */
     .region{fill:var(--grey) !important; stroke:var(--stroke) !important; stroke-width:1 !important;}
     /* Panevėžys žalias */
@@ -29,7 +29,6 @@
     // Švarus administracinis Lietuvos žemėlapis
     const SVG_URL = 'https://upload.wikimedia.org/wikipedia/commons/3/3d/Lithuania_adm_location_map.svg';
 
-    // Panevėžio pavadinimų variantai SVG faile
     const PANEVEZYS_TITLES = [
       'Panevėžio m. sav.',
       'Panevėžys city municipality',
@@ -55,17 +54,14 @@
       const svg = host.querySelector('svg');
       if(!svg){ host.textContent = "SVG nerastas"; return; }
 
-      // Nuvalom legendas, jei tokių būtų
       svg.querySelectorAll('rect, text').forEach(el=>el.remove());
 
-      // Perdažom visus pilkai
       const shapes = Array.from(svg.querySelectorAll('path, polygon, polyline'));
       shapes.forEach(el=>{
         el.removeAttribute('fill');
         el.classList.add('region');
       });
 
-      // Surandam Panevėžį
       let panevezysEl = null;
       shapes.forEach(el=>{
         const titleText = (el.querySelector('title')?.textContent || '').trim();
@@ -75,7 +71,6 @@
         }
       });
 
-      // Tooltip – tik Panevėžiui
       if(panevezysEl){
         panevezysEl.addEventListener('mousemove', e=>{
           const bounds = host.getBoundingClientRect();
@@ -88,6 +83,7 @@
   </script>
 </body>
 </html>
+
 
 
 
